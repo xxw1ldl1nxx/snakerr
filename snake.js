@@ -61,6 +61,48 @@ function setTouch() {
         }
     }
 }
+function setKeys() {
+    document.addEventListener("keydown", (event) => {
+        switch (event.key.toLowerCase()) {
+            case "arrowup":
+                direction = "up";
+                break;
+            case "arrowdown":
+                direction = "down";
+                break;
+            case "arrowleft":
+                direction = "left";
+                break;
+            case "arrowright":
+                direction = "right";
+                break;
+            case "w":
+                direction = "up";
+                break;
+            case "s":
+                direction = "down";
+                break;
+            case "a":
+                direction = "left";
+                break;
+            case "d":
+                direction = "right";
+                break;
+            case "ц":
+                direction = "up";
+                break;
+            case "ы":
+                direction = "down";
+                break;
+            case "ф":
+                direction = "left";
+                break;
+            case "в":
+                direction = "right";
+                break;
+        }
+    });
+}
 const BEST_SCORE = "best_score";
 canvasElement.width = SIZE * BLOCK_SIZE;
 canvasElement.height = SIZE * BLOCK_SIZE;
@@ -270,46 +312,7 @@ function gameLoop() {
     }
     setTimeout(gameLoop, 1000 / speed);
 }
-document.addEventListener("keydown", (event) => {
-    switch (event.key.toLowerCase()) {
-        case "arrowup":
-            direction = "up";
-            break;
-        case "arrowdown":
-            direction = "down";
-            break;
-        case "arrowleft":
-            direction = "left";
-            break;
-        case "arrowright":
-            direction = "right";
-            break;
-        case "w":
-            direction = "up";
-            break;
-        case "s":
-            direction = "down";
-            break;
-        case "a":
-            direction = "left";
-            break;
-        case "d":
-            direction = "right";
-            break;
-        case "ц":
-            direction = "up";
-            break;
-        case "ы":
-            direction = "down";
-            break;
-        case "ф":
-            direction = "left";
-            break;
-        case "в":
-            direction = "right";
-            break;
-    }
-});
+setKeys();
 setTouch();
 function playGame() {
     canvasElement.removeEventListener("click", playGame);
