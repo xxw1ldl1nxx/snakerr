@@ -5,7 +5,65 @@ const scoreElement = document.getElementById("score") as HTMLDivElement;
 const SIZE = 10;
 const START_SPEED = 2;
 const SPEED_INCREASE = 0.2;
-const BLOCK_SIZE = Math.floor((window.innerHeight - 200) / SIZE);
+const SENSIVITY = 20;
+
+let blockVal = Math.floor((window.innerHeight - window.innerHeight * 0.2) / SIZE);
+if (window.innerWidth < blockVal * SIZE + window.innerWidth * 0.1) blockVal = Math.floor((window.innerWidth - window.innerWidth * 0.1) / SIZE);
+const BLOCK_SIZE = blockVal
+
+let startPos: Index | null = null;
+let newPos: Index | null = null;
+
+function isIndex(val: any): val is Index {
+  return val?.x !== undefined && val?.y !== undefined;
+}
+
+function setTouch() {
+  canvasElement.addEventListener("touchstart", (e) => {
+    startPos = {
+      x: e.changedTouches[0].clientX,
+      y: e.changedTouches[0].clientY,
+    };
+  });
+
+  canvasElement.addEventListener("touchmove", (e) => {
+    newPos = {
+      x: e.changedTouches[0].clientX,
+      y: e.changedTouches[0].clientY,
+    };
+  });
+
+  canvasElement.addEventListener("touchend", () => {
+    const dir = checkSwipe();
+    if (dir) direction = dir;
+    startPos = null;
+    newPos = null;
+  });
+
+  function checkSwipe(): Direction | null {
+    if (!isIndex(newPos) || !isIndex(startPos)) {
+      return null;
+    }
+    const absMove = Math.sqrt(
+      Math.abs(newPos.x - startPos.x) ** 2 +
+        Math.abs(newPos.y - startPos.y) ** 2
+    );
+    if (absMove < SENSIVITY) return null;
+    if (Math.abs(newPos.x - startPos.x) > Math.abs(newPos.y - startPos.y)) {
+      if (newPos.x - startPos.x > 0) {
+        return "right";
+      } else {
+        return "left";
+      }
+    } else {
+      if (newPos.y - startPos.y > 0) {
+        return "down";
+      } else {
+        return "up";
+      }
+    }
+  }
+}
 
 const BEST_SCORE = "best_score";
 
@@ -334,6 +392,8 @@ document.addEventListener("keydown", (event) => {
       break;
   }
 });
+
+setTouch();
 
 function playGame() {
   canvasElement.removeEventListener("click", playGame);
