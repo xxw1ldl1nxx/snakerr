@@ -4,8 +4,16 @@ canvas {
     box-shadow: inset 0 0 5rem rgba(0, 0, 0, 0.5);
     background-color: lavender;
     touch-action: none;
-    overflow-y: hidden
+    overflow-y: hidden;
+    margin-top: 2%;
 }
+
+.under {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
 #score {
     font-size: 24px;
     font-family: monospace;

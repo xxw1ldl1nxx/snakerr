@@ -7,9 +7,12 @@ const START_SPEED = 2;
 const SPEED_INCREASE = 0.2;
 const SENSIVITY = 20;
 
-let blockVal = Math.floor((window.innerHeight - window.innerHeight * 0.2) / SIZE);
-if (window.innerWidth < blockVal * SIZE + window.innerWidth * 0.1) blockVal = Math.floor((window.innerWidth - window.innerWidth * 0.1) / SIZE);
-const BLOCK_SIZE = blockVal
+let blockVal = Math.floor(
+  (window.innerHeight - window.innerHeight * 0.2) / SIZE
+);
+if (window.innerWidth < blockVal * SIZE + window.innerWidth * 0.1)
+  blockVal = Math.floor((window.innerWidth - window.innerWidth * 0.1) / SIZE);
+const BLOCK_SIZE = blockVal;
 
 let startPos: Index | null = null;
 let newPos: Index | null = null;
@@ -63,6 +66,51 @@ function setTouch() {
       }
     }
   }
+}
+
+function setKeys() {
+  document.addEventListener("keydown", (event) => {
+    switch (event.key.toLowerCase()) {
+      case "arrowup":
+        direction = "up";
+        break;
+      case "arrowdown":
+        direction = "down";
+        break;
+      case "arrowleft":
+        direction = "left";
+        break;
+      case "arrowright":
+        direction = "right";
+        break;
+
+      case "w":
+        direction = "up";
+        break;
+      case "s":
+        direction = "down";
+        break;
+      case "a":
+        direction = "left";
+        break;
+      case "d":
+        direction = "right";
+        break;
+
+      case "ц":
+        direction = "up";
+        break;
+      case "ы":
+        direction = "down";
+        break;
+      case "ф":
+        direction = "left";
+        break;
+      case "в":
+        direction = "right";
+        break;
+    }
+  });
 }
 
 const BEST_SCORE = "best_score";
@@ -350,49 +398,7 @@ function gameLoop() {
   setTimeout(gameLoop, 1000 / speed);
 }
 
-document.addEventListener("keydown", (event) => {
-  switch (event.key.toLowerCase()) {
-    case "arrowup":
-      direction = "up";
-      break;
-    case "arrowdown":
-      direction = "down";
-      break;
-    case "arrowleft":
-      direction = "left";
-      break;
-    case "arrowright":
-      direction = "right";
-      break;
-
-    case "w":
-      direction = "up";
-      break;
-    case "s":
-      direction = "down";
-      break;
-    case "a":
-      direction = "left";
-      break;
-    case "d":
-      direction = "right";
-      break;
-
-    case "ц":
-      direction = "up";
-      break;
-    case "ы":
-      direction = "down";
-      break;
-    case "ф":
-      direction = "left";
-      break;
-    case "в":
-      direction = "right";
-      break;
-  }
-});
-
+setKeys();
 setTouch();
 
 function playGame() {
