@@ -143,24 +143,6 @@ function createFood(): Index {
   return free[Math.floor(Math.random() * free.length)];
 }
 
-const ss = Math.floor(SIZE / 2) * BLOCK_SIZE - BLOCK_SIZE;
-let snake: Index[] = [
-  {
-    x: ss,
-    y: ss,
-  },
-  {
-    x: ss - BLOCK_SIZE,
-    y: ss,
-  },
-  {
-    x: ss - 2 * BLOCK_SIZE,
-    y: ss,
-  },
-];
-let food: Index;
-food = createFood();
-
 function hasValue(val: string | null): val is string {
   return typeof val === "string";
 }
@@ -168,12 +150,44 @@ function hasValue(val: string | null): val is string {
 type Direction = "right" | "left" | "up" | "down";
 type Music = "normal" | "dead" | "eat";
 type Index = { x: number; y: number };
-let score = 0;
-const storage_record = localStorage.getItem(BEST_SCORE);
-const record = hasValue(storage_record) ? parseInt(storage_record) : 0;
-let direction: Direction = "right";
-let oldDirection: Direction = "right";
-let speed = START_SPEED;
+
+function setInitValues() {
+  const ss = Math.floor(SIZE / 2) * BLOCK_SIZE - BLOCK_SIZE;
+
+  direction = "right";
+  oldDirection = "right";
+
+  score = 0;
+  storageRecord = localStorage.getItem(BEST_SCORE);
+  record = hasValue(storageRecord) ? parseInt(storageRecord) : 0;
+  speed = START_SPEED;
+
+  snake = [
+    {
+      x: ss,
+      y: ss,
+    },
+    {
+      x: ss - BLOCK_SIZE,
+      y: ss,
+    },
+    {
+      x: ss - 2 * BLOCK_SIZE,
+      y: ss,
+    },
+  ];
+  food = createFood();
+}
+
+let snake: Index[];
+let food: Index;
+let score: number;
+let storageRecord: string | null;
+let record: number;
+let direction: Direction;
+let oldDirection: Direction;
+let speed: number;
+
 const altDirection = new Map<Direction, Direction>([
   ["right", "left"],
   ["left", "right"],
@@ -182,13 +196,18 @@ const altDirection = new Map<Direction, Direction>([
 ]);
 
 const deadAudio = new Audio();
-deadAudio.src = "audio/dead.mp3";
+deadAudio.src = "audio/dead.wav";
+deadAudio.volume = 0.2;
 const normalAudio = new Audio();
-normalAudio.src = "audio/normal.mp3";
+normalAudio.src = "audio/normal.wav";
 normalAudio.loop = true;
+normalAudio.volume = 0.2;
 const eatAudio = new Audio();
-eatAudio.src = "audio/eat.mp3";
-eatAudio.volume = 0.4;
+eatAudio.src = "audio/eat.wav";
+eatAudio.volume = 1;
+const puffAudio = new Audio();
+puffAudio.src = "audio/puff.wav";
+puffAudio.volume = 0.6;
 
 const cover = new Image();
 cover.src = "img/cover.jpg";
@@ -196,10 +215,15 @@ cover.src = "img/cover.jpg";
 function playBackground(bg: Music) {
   switch (bg) {
     case "normal":
+      if (!deadAudio.ended) {
+        deadAudio.pause();
+        deadAudio.currentTime = 0;
+      }
       normalAudio.play();
       break;
     case "dead":
       normalAudio.pause();
+      normalAudio.currentTime = 0;
       deadAudio.play();
       break;
     case "eat":
@@ -388,14 +412,28 @@ function gameLoop() {
   if (!cont) {
     playBackground("dead");
     if (score > record) localStorage.setItem(BEST_SCORE, score.toString());
+    puffAudio.play();
     // alert("Game over!");
+    playAgainQuestion();
     return;
   } else if (snake.length === SIZE * SIZE) {
     localStorage.setItem(BEST_SCORE, snake.length.toString());
     // alert("You win!");
+    playAgainQuestion();
     return;
   }
   setTimeout(gameLoop, 1000 / speed);
+}
+
+function playAgainQuestion() {
+  var center = SIZE * BLOCK_SIZE;
+  const szz = (center / 19) * 2;
+  ctx.font = `${szz}px vernada`;
+  ctx.fillStyle = "black";
+  ctx.fillText("click to play again", center / 8, center / 2);
+
+  setInitValues();
+  canvasElement.addEventListener("click", playGame);
 }
 
 setKeys();
@@ -403,6 +441,7 @@ setTouch();
 
 function playGame() {
   canvasElement.removeEventListener("click", playGame);
+  setInitValues();
   draw();
   playBackground("normal");
   gameLoop();
