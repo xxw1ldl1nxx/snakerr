@@ -168,40 +168,44 @@ const altDirection = new Map([
     ["up", "down"],
     ["down", "up"],
 ]);
-const deadAudio = new Audio();
-deadAudio.src = "audio/dead.wav";
-deadAudio.volume = 0.2;
-const normalAudio = new Audio();
-normalAudio.src = "audio/normal.wav";
-normalAudio.loop = true;
-normalAudio.volume = 0.2;
+const deathAudio = new Audio();
+deathAudio.src = "audio/death.mp3";
+deathAudio.volume = 0.2;
+const backgroundAudio = new Audio();
+backgroundAudio.src = "audio/background.mp3";
+backgroundAudio.loop = true;
+backgroundAudio.volume = 0.2;
 const eatAudio = new Audio();
-eatAudio.src = "audio/eat.wav";
+eatAudio.src = "audio/eat.mp3";
 eatAudio.volume = 1;
 const puffAudio = new Audio();
-puffAudio.src = "audio/puff.wav";
-puffAudio.volume = 0.6;
+puffAudio.src = "audio/puff.mp3";
+puffAudio.volume = 0.2;
 const cover = new Image();
 cover.src = "img/cover.jpg";
 function playBackground(bg) {
     switch (bg) {
-        case "normal":
-            if (!deadAudio.ended) {
-                deadAudio.pause();
-                deadAudio.currentTime = 0;
+        case "background":
+            if (!deathAudio.ended) {
+                deathAudio.pause();
+                deathAudio.currentTime = 0;
             }
-            normalAudio.play();
+            backgroundAudio.play();
             break;
-        case "dead":
-            normalAudio.pause();
-            normalAudio.currentTime = 0;
-            deadAudio.play();
+        case "death":
+            backgroundAudio.pause();
+            backgroundAudio.currentTime = 0;
+            deathAudio.play();
             break;
         case "eat":
             if (!eatAudio.ended) {
                 eatAudio.currentTime = 0;
             }
             eatAudio.play();
+            break;
+        case "puff":
+            puffAudio.play();
+            break;
     }
 }
 function drawSnakeHead(x, y) {
@@ -318,28 +322,26 @@ function gameLoop() {
     const cont = update();
     draw();
     if (!cont) {
-        playBackground("dead");
+        playBackground("death");
+        playBackground("puff");
         if (score > record)
             localStorage.setItem(BEST_SCORE, score.toString());
-        puffAudio.play();
-        // alert("Game over!");
         playAgainQuestion();
         return;
     }
     else if (snake.length === SIZE * SIZE) {
-        localStorage.setItem(BEST_SCORE, snake.length.toString());
-        // alert("You win!");
+        localStorage.setItem(BEST_SCORE, score.toString());
         playAgainQuestion();
         return;
     }
     setTimeout(gameLoop, 1000 / speed);
 }
 function playAgainQuestion() {
-    var center = SIZE * BLOCK_SIZE;
+    const center = (SIZE * BLOCK_SIZE) / 2;
     const szz = (center / 19) * 2;
     ctx.font = `${szz}px vernada`;
     ctx.fillStyle = "black";
-    ctx.fillText("click to play again", center / 8, center / 2);
+    ctx.fillText("click to play again", center / 4, center);
     setInitValues();
     canvasElement.addEventListener("click", playGame);
 }
@@ -349,7 +351,7 @@ function playGame() {
     canvasElement.removeEventListener("click", playGame);
     setInitValues();
     draw();
-    playBackground("normal");
+    playBackground("background");
     gameLoop();
 }
 cover.onload = () => {
