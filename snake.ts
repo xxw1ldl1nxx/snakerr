@@ -119,7 +119,7 @@ canvasElement.width = SIZE * BLOCK_SIZE;
 canvasElement.height = SIZE * BLOCK_SIZE;
 
 function timerDeco(f: (...args: any[]) => any): (...args: any[]) => any {
-  return function (...args: any[]): Index {
+  return function (...args: any[]): any {
     const start = performance.now();
     const res = f(...args);
     console.log(performance.now() - start);
