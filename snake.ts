@@ -158,7 +158,7 @@ function setInitValues() {
   oldDirection = "right";
 
   score = 0;
-  storageRecord = localStorage.getItem(BEST_SCORE);
+  const storageRecord = localStorage.getItem(BEST_SCORE);
   record = hasValue(storageRecord) ? parseInt(storageRecord) : 0;
   speed = START_SPEED;
 
@@ -182,7 +182,6 @@ function setInitValues() {
 let snake: Index[];
 let food: Index;
 let score: number;
-let storageRecord: string | null;
 let record: number;
 let direction: Direction;
 let oldDirection: Direction;
@@ -197,17 +196,19 @@ const altDirection = new Map<Direction, Direction>([
 
 const deathAudio = new Audio();
 deathAudio.src = "audio/death.mp3";
-deathAudio.volume = 0.2;
 const backgroundAudio = new Audio();
 backgroundAudio.src = "audio/background.mp3";
 backgroundAudio.loop = true;
-backgroundAudio.volume = 0.2;
 const eatAudio = new Audio();
 eatAudio.src = "audio/eat.mp3";
-eatAudio.volume = 1;
 const puffAudio = new Audio();
 puffAudio.src = "audio/puff.mp3";
-puffAudio.volume = 0.2;
+
+deathAudio.volume = 1;
+backgroundAudio.volume = 1;
+eatAudio.volume = 0.4;
+puffAudio.volume = 1;
+
 
 const cover = new Image();
 cover.src = "img/cover.jpg";
