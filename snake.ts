@@ -147,8 +147,13 @@ function hasValue(val: string | null): val is string {
   return typeof val === "string";
 }
 
+enum Music {
+  background,
+  death,
+  eat,
+  puff
+}
 type Direction = "right" | "left" | "up" | "down";
-type Music = "background" | "death" | "eat" | "puff";
 type Index = { x: number; y: number };
 
 function setInitValues() {
@@ -201,40 +206,39 @@ backgroundAudio.src = "audio/background.mp3";
 backgroundAudio.loop = true;
 const eatAudio = new Audio();
 eatAudio.src = "audio/eat.mp3";
-const puffAudio = new Audio();
-puffAudio.src = "audio/puff.mp3";
+// const puffAudio = new Audio();
+// puffAudio.src = "audio/puff.mp3";
 
 deathAudio.volume = 1;
 backgroundAudio.volume = 1;
 eatAudio.volume = 0.4;
-puffAudio.volume = 1;
-
+// puffAudio.volume = 1;
 
 const cover = new Image();
 cover.src = "img/cover.jpg";
 
 function playBackground(bg: Music) {
   switch (bg) {
-    case "background":
+    case Music.background:
       if (!deathAudio.ended) {
         deathAudio.pause();
         deathAudio.currentTime = 0;
       }
       backgroundAudio.play();
       break;
-    case "death":
+    case Music.death:
       backgroundAudio.pause();
       backgroundAudio.currentTime = 0;
       deathAudio.play();
       break;
-    case "eat":
+    case Music.eat:
       if (!eatAudio.ended) {
         eatAudio.currentTime = 0;
       }
       eatAudio.play();
       break;
-    case "puff":
-      puffAudio.play();
+    case Music.puff:
+      // puffAudio.play();
       break;
   }
 }
@@ -397,7 +401,7 @@ function update(): boolean {
   }
 
   if (newX === food.x && newY === food.y) {
-    playBackground("eat");
+    playBackground(Music.eat);
     score++;
     speed += SPEED_INCREASE;
     food = createFood();
@@ -415,8 +419,8 @@ function gameLoop() {
   draw();
 
   if (!cont) {
-    playBackground("death");
-    playBackground("puff");
+    playBackground(Music.death);
+    playBackground(Music.puff);
     if (score > record) localStorage.setItem(BEST_SCORE, score.toString());
     playAgainQuestion();
     return;
@@ -429,11 +433,19 @@ function gameLoop() {
 }
 
 function playAgainQuestion() {
+  const text = "click to play again";
+  const font = "px arial"
   const center = (SIZE * BLOCK_SIZE) / 2;
-  const szz = (center / 19) * 2;
-  ctx.font = `${szz}px vernada`;
+  let textSize = 8;
+  ctx.font = textSize + font;
+  while (ctx.measureText(text).width < canvasElement.width * 0.8) {
+    textSize += 4;
+    ctx.font = textSize + font;
+  }
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
   ctx.fillStyle = "black";
-  ctx.fillText("click to play again", center / 4, center);
+  ctx.fillText(text, center, center);
 
   setInitValues();
   canvasElement.addEventListener("click", playGame);
@@ -446,7 +458,7 @@ function playGame() {
   canvasElement.removeEventListener("click", playGame);
   setInitValues();
   draw();
-  playBackground("background");
+  playBackground(Music.background);
   gameLoop();
 }
 

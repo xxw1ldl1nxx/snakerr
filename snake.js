@@ -130,6 +130,13 @@ function createFood() {
 function hasValue(val) {
     return typeof val === "string";
 }
+var Music;
+(function (Music) {
+    Music[Music["background"] = 0] = "background";
+    Music[Music["death"] = 1] = "death";
+    Music[Music["eat"] = 2] = "eat";
+    Music[Music["puff"] = 3] = "puff";
+})(Music || (Music = {}));
 function setInitValues() {
     const ss = Math.floor(SIZE / 2) * BLOCK_SIZE - BLOCK_SIZE;
     direction = "right";
@@ -174,36 +181,36 @@ backgroundAudio.src = "audio/background.mp3";
 backgroundAudio.loop = true;
 const eatAudio = new Audio();
 eatAudio.src = "audio/eat.mp3";
-const puffAudio = new Audio();
-puffAudio.src = "audio/puff.mp3";
+// const puffAudio = new Audio();
+// puffAudio.src = "audio/puff.mp3";
 deathAudio.volume = 1;
 backgroundAudio.volume = 1;
 eatAudio.volume = 0.4;
-puffAudio.volume = 1;
+// puffAudio.volume = 1;
 const cover = new Image();
 cover.src = "img/cover.jpg";
 function playBackground(bg) {
     switch (bg) {
-        case "background":
+        case Music.background:
             if (!deathAudio.ended) {
                 deathAudio.pause();
                 deathAudio.currentTime = 0;
             }
             backgroundAudio.play();
             break;
-        case "death":
+        case Music.death:
             backgroundAudio.pause();
             backgroundAudio.currentTime = 0;
             deathAudio.play();
             break;
-        case "eat":
+        case Music.eat:
             if (!eatAudio.ended) {
                 eatAudio.currentTime = 0;
             }
             eatAudio.play();
             break;
-        case "puff":
-            puffAudio.play();
+        case Music.puff:
+            // puffAudio.play();
             break;
     }
 }
@@ -306,7 +313,7 @@ function update() {
         return false;
     }
     if (newX === food.x && newY === food.y) {
-        playBackground("eat");
+        playBackground(Music.eat);
         score++;
         speed += SPEED_INCREASE;
         food = createFood();
@@ -321,8 +328,8 @@ function gameLoop() {
     const cont = update();
     draw();
     if (!cont) {
-        playBackground("death");
-        playBackground("puff");
+        playBackground(Music.death);
+        playBackground(Music.puff);
         if (score > record)
             localStorage.setItem(BEST_SCORE, score.toString());
         playAgainQuestion();
@@ -336,11 +343,19 @@ function gameLoop() {
     setTimeout(gameLoop, 1000 / speed);
 }
 function playAgainQuestion() {
+    const text = "click to play again";
+    const font = "px arial";
     const center = (SIZE * BLOCK_SIZE) / 2;
-    const szz = (center / 19) * 2;
-    ctx.font = `${szz}px vernada`;
+    let textSize = 8;
+    ctx.font = textSize + font;
+    while (ctx.measureText(text).width < canvasElement.width * 0.8) {
+        textSize += 4;
+        ctx.font = textSize + font;
+    }
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
     ctx.fillStyle = "black";
-    ctx.fillText("click to play again", center / 4, center);
+    ctx.fillText(text, center, center);
     setInitValues();
     canvasElement.addEventListener("click", playGame);
 }
@@ -350,7 +365,7 @@ function playGame() {
     canvasElement.removeEventListener("click", playGame);
     setInitValues();
     draw();
-    playBackground("background");
+    playBackground(Music.background);
     gameLoop();
 }
 cover.onload = () => {
