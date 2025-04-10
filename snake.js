@@ -127,62 +127,91 @@ function createFood() {
     }
     return free[Math.floor(Math.random() * free.length)];
 }
-const ss = Math.floor(SIZE / 2) * BLOCK_SIZE - BLOCK_SIZE;
-let snake = [
-    {
-        x: ss,
-        y: ss,
-    },
-    {
-        x: ss - BLOCK_SIZE,
-        y: ss,
-    },
-    {
-        x: ss - 2 * BLOCK_SIZE,
-        y: ss,
-    },
-];
-let food;
-food = createFood();
 function hasValue(val) {
     return typeof val === "string";
 }
-let score = 0;
-const storage_record = localStorage.getItem(BEST_SCORE);
-const record = hasValue(storage_record) ? parseInt(storage_record) : 0;
-let direction = "right";
-let oldDirection = "right";
-let speed = START_SPEED;
+var Music;
+(function (Music) {
+    Music[Music["background"] = 0] = "background";
+    Music[Music["death"] = 1] = "death";
+    Music[Music["eat"] = 2] = "eat";
+    Music[Music["puff"] = 3] = "puff";
+})(Music || (Music = {}));
+function setInitValues() {
+    const ss = Math.floor(SIZE / 2) * BLOCK_SIZE - BLOCK_SIZE;
+    direction = "right";
+    oldDirection = "right";
+    score = 0;
+    const storageRecord = localStorage.getItem(BEST_SCORE);
+    record = hasValue(storageRecord) ? parseInt(storageRecord) : 0;
+    speed = START_SPEED;
+    snake = [
+        {
+            x: ss,
+            y: ss,
+        },
+        {
+            x: ss - BLOCK_SIZE,
+            y: ss,
+        },
+        {
+            x: ss - 2 * BLOCK_SIZE,
+            y: ss,
+        },
+    ];
+    food = createFood();
+}
+let snake;
+let food;
+let score;
+let record;
+let direction;
+let oldDirection;
+let speed;
 const altDirection = new Map([
     ["right", "left"],
     ["left", "right"],
     ["up", "down"],
     ["down", "up"],
 ]);
-const deadAudio = new Audio();
-deadAudio.src = "audio/dead.mp3";
-const normalAudio = new Audio();
-normalAudio.src = "audio/normal.mp3";
-normalAudio.loop = true;
+const deathAudio = new Audio();
+deathAudio.src = "audio/death.mp3";
+const backgroundAudio = new Audio();
+backgroundAudio.src = "audio/background.mp3";
+backgroundAudio.loop = true;
 const eatAudio = new Audio();
 eatAudio.src = "audio/eat.mp3";
+// const puffAudio = new Audio();
+// puffAudio.src = "audio/puff.mp3";
+deathAudio.volume = 1;
+backgroundAudio.volume = 1;
 eatAudio.volume = 0.4;
+// puffAudio.volume = 1;
 const cover = new Image();
 cover.src = "img/cover.jpg";
 function playBackground(bg) {
     switch (bg) {
-        case "normal":
-            normalAudio.play();
+        case Music.background:
+            if (!deathAudio.ended) {
+                deathAudio.pause();
+                deathAudio.currentTime = 0;
+            }
+            backgroundAudio.play();
             break;
-        case "dead":
-            normalAudio.pause();
-            deadAudio.play();
+        case Music.death:
+            backgroundAudio.pause();
+            backgroundAudio.currentTime = 0;
+            deathAudio.play();
             break;
-        case "eat":
+        case Music.eat:
             if (!eatAudio.ended) {
                 eatAudio.currentTime = 0;
             }
             eatAudio.play();
+            break;
+        case Music.puff:
+            // puffAudio.play();
+            break;
     }
 }
 function drawSnakeHead(x, y) {
@@ -284,7 +313,7 @@ function update() {
         return false;
     }
     if (newX === food.x && newY === food.y) {
-        playBackground("eat");
+        playBackground(Music.eat);
         score++;
         speed += SPEED_INCREASE;
         food = createFood();
@@ -299,25 +328,44 @@ function gameLoop() {
     const cont = update();
     draw();
     if (!cont) {
-        playBackground("dead");
+        playBackground(Music.death);
+        playBackground(Music.puff);
         if (score > record)
             localStorage.setItem(BEST_SCORE, score.toString());
-        // alert("Game over!");
+        playAgainQuestion();
         return;
     }
     else if (snake.length === SIZE * SIZE) {
-        localStorage.setItem(BEST_SCORE, snake.length.toString());
-        // alert("You win!");
+        localStorage.setItem(BEST_SCORE, score.toString());
+        playAgainQuestion();
         return;
     }
     setTimeout(gameLoop, 1000 / speed);
+}
+function playAgainQuestion() {
+    const text = "click to play again";
+    const font = "px arial";
+    const center = (SIZE * BLOCK_SIZE) / 2;
+    let textSize = 8;
+    ctx.font = textSize + font;
+    while (ctx.measureText(text).width < canvasElement.width * 0.8) {
+        textSize += 4;
+        ctx.font = textSize + font;
+    }
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "black";
+    ctx.fillText(text, center, center);
+    setInitValues();
+    canvasElement.addEventListener("click", playGame);
 }
 setKeys();
 setTouch();
 function playGame() {
     canvasElement.removeEventListener("click", playGame);
+    setInitValues();
     draw();
-    playBackground("normal");
+    playBackground(Music.background);
     gameLoop();
 }
 cover.onload = () => {
