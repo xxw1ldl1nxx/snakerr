@@ -149,6 +149,7 @@ function hasValue(val: string | null): val is string {
 
 enum Music {
   background,
+  progress,
   death,
   eat,
   puff
@@ -182,6 +183,9 @@ function setInitValues() {
     },
   ];
   food = createFood();
+
+  backgroundAudio.volume = 1;
+  backgroundProgressAudio.volume = 0;
 }
 
 let snake: Index[];
@@ -201,16 +205,24 @@ const altDirection = new Map<Direction, Direction>([
 
 const deathAudio = new Audio();
 deathAudio.src = "audio/death.mp3";
+
 const backgroundAudio = new Audio();
 backgroundAudio.src = "audio/background.mp3";
 backgroundAudio.loop = true;
+
+const backgroundProgressAudio = new Audio();
+backgroundProgressAudio.src = "audio/progress.mp3";
+backgroundAudio.loop = true;
+
 const eatAudio = new Audio();
 eatAudio.src = "audio/eat.mp3";
+
 // const puffAudio = new Audio();
 // puffAudio.src = "audio/puff.mp3";
 
 deathAudio.volume = 1;
 backgroundAudio.volume = 1;
+backgroundProgressAudio.volume = 0;
 eatAudio.volume = 0.4;
 // puffAudio.volume = 1;
 
@@ -225,6 +237,15 @@ function playBackground(bg: Music) {
         deathAudio.currentTime = 0;
       }
       backgroundAudio.play();
+      backgroundProgressAudio.play();
+      break;
+    case Music.progress:
+      for (let i = 0; i < 10; i++) {
+        setTimeout(() => {
+          backgroundProgressAudio.volume = 0.1 * i;
+          backgroundAudio.volume = 1 - 0.1 * i;
+        }, 200 * i)
+      }
       break;
     case Music.death:
       backgroundAudio.pause();
@@ -403,6 +424,7 @@ function update(): boolean {
   if (newX === food.x && newY === food.y) {
     playBackground(Music.eat);
     score++;
+    if (score === 4) playBackground(Music.progress);
     speed += SPEED_INCREASE;
     food = createFood();
   } else {
