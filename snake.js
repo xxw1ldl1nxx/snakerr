@@ -161,8 +161,6 @@ function setInitValues() {
         },
     ];
     food = createFood();
-    backgroundAudio.volume = 1;
-    backgroundProgressAudio.volume = 0;
 }
 let snake;
 let food;
@@ -184,7 +182,7 @@ backgroundAudio.src = "audio/background.mp3";
 backgroundAudio.loop = true;
 const backgroundProgressAudio = new Audio();
 backgroundProgressAudio.src = "audio/progress.mp3";
-backgroundAudio.loop = true;
+backgroundProgressAudio.loop = true;
 const eatAudio = new Audio();
 eatAudio.src = "audio/eat.mp3";
 // const puffAudio = new Audio();
@@ -203,20 +201,25 @@ function playBackground(bg) {
                 deathAudio.pause();
                 deathAudio.currentTime = 0;
             }
+            backgroundAudio.volume = 1;
+            backgroundProgressAudio.volume = 0;
             backgroundAudio.play();
             backgroundProgressAudio.play();
             break;
         case Music.progress:
             for (let i = 0; i < 10; i++) {
+                const cf = i + 1;
                 setTimeout(() => {
-                    backgroundProgressAudio.volume = 0.1 * i;
-                    backgroundAudio.volume = 1 - 0.1 * i;
+                    backgroundProgressAudio.volume = 0.1 * cf;
+                    backgroundAudio.volume = 1 - 0.1 * cf;
                 }, 200 * i);
             }
             break;
         case Music.death:
             backgroundAudio.pause();
             backgroundAudio.currentTime = 0;
+            backgroundProgressAudio.pause();
+            backgroundProgressAudio.currentTime = 0;
             deathAudio.play();
             break;
         case Music.eat:
@@ -331,7 +334,7 @@ function update() {
     if (newX === food.x && newY === food.y) {
         playBackground(Music.eat);
         score++;
-        if (score === 4)
+        if (score === 2)
             playBackground(Music.progress);
         speed += SPEED_INCREASE;
         food = createFood();
