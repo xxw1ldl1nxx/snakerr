@@ -181,12 +181,12 @@ backgroundAudio.loop = true;
 const backgroundProgressAudio = new Audio("audio/progress.mp3");
 backgroundProgressAudio.loop = true;
 const eatAudio = new Audio("audio/eat.mp3");
-// const puffAudio = new Audio("audio/puff.mp3");
+const puffAudio = new Audio("audio/puff.mp3");
 deathAudio.volume = 1;
 backgroundAudio.volume = 1;
 backgroundProgressAudio.volume = 0;
-eatAudio.volume = 0.4;
-// puffAudio.volume = 1;
+eatAudio.volume = 1;
+puffAudio.volume = 1;
 const cover = new Image();
 cover.src = "img/cover.jpg";
 let audioCrossfadeTimeoutIds = [];
@@ -198,7 +198,7 @@ function audioCrossfade(decr, incr, time, steps, curve) {
         const id = setTimeout(() => {
             incr.volume = Math.pow((volumeStep * cf), (1 / curve));
             decr.volume = Math.pow((1 - volumeStep * cf), curve);
-            console.log(incr.volume.toPrecision(4), " - ", decr.volume.toPrecision(4));
+            // console.log(incr.volume.toPrecision(4), " - ", decr.volume.toPrecision(4));
         }, (time / steps) * i);
         ids.push(id);
     }
@@ -236,7 +236,10 @@ function playBackground(bg) {
             eatAudio.play();
             break;
         case Music.puff:
-            // puffAudio.play();
+            if (!puffAudio.ended) {
+                puffAudio.currentTime = 0;
+            }
+            puffAudio.play();
             break;
     }
 }
@@ -357,7 +360,6 @@ function gameLoop() {
     draw();
     if (!cont) {
         playBackground(Music.death);
-        playBackground(Music.puff);
         if (score > record)
             localStorage.setItem(BEST_SCORE, score.toString());
         playAgainQuestion();
@@ -393,6 +395,7 @@ function playGame() {
     canvasElement.removeEventListener("click", playGame);
     setInitValues();
     draw();
+    playBackground(Music.puff);
     playBackground(Music.background);
     gameLoop();
 }

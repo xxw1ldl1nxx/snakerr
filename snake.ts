@@ -210,13 +210,13 @@ backgroundProgressAudio.loop = true;
 
 const eatAudio = new Audio("audio/eat.mp3");
 
-// const puffAudio = new Audio("audio/puff.mp3");
+const puffAudio = new Audio("audio/puff.mp3");
 
 deathAudio.volume = 1;
 backgroundAudio.volume = 1;
 backgroundProgressAudio.volume = 0;
-eatAudio.volume = 0.4;
-// puffAudio.volume = 1;
+eatAudio.volume = 1;
+puffAudio.volume = 1;
 
 const cover = new Image();
 cover.src = "img/cover.jpg";
@@ -282,7 +282,10 @@ function playBackground(bg: Music) {
       eatAudio.play();
       break;
     case Music.puff:
-      // puffAudio.play();
+      if (!puffAudio.ended) {
+        puffAudio.currentTime = 0;
+      }
+      puffAudio.play();
       break;
   }
 }
@@ -465,7 +468,6 @@ function gameLoop() {
 
   if (!cont) {
     playBackground(Music.death);
-    playBackground(Music.puff);
     if (score > record) localStorage.setItem(BEST_SCORE, score.toString());
     playAgainQuestion();
     return;
@@ -503,6 +505,7 @@ function playGame() {
   canvasElement.removeEventListener("click", playGame);
   setInitValues();
   draw();
+  playBackground(Music.puff);
   playBackground(Music.background);
   gameLoop();
 }
