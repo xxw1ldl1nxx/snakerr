@@ -6,6 +6,8 @@ const SIZE = 10;
 const START_SPEED = 2;
 const SPEED_INCREASE = 0.2;
 const SENSIVITY = 20;
+const PROGRESS_SCORE = 20;
+const CROSSFADE_TIME = 4;
 let blockVal = Math.floor((window.innerHeight - window.innerHeight * 0.2) / SIZE);
 if (window.innerWidth < blockVal * SIZE + window.innerWidth * 0.1)
     blockVal = Math.floor((window.innerWidth - window.innerWidth * 0.1) / SIZE);
@@ -185,7 +187,7 @@ const puffAudio = new Audio("audio/puff.mp3");
 deathAudio.volume = 1;
 backgroundAudio.volume = 1;
 backgroundProgressAudio.volume = 0;
-eatAudio.volume = 1;
+eatAudio.volume = 0.6;
 puffAudio.volume = 1;
 const cover = new Image();
 cover.src = "img/cover.jpg";
@@ -217,7 +219,7 @@ function playBackground(bg) {
             backgroundProgressAudio.play();
             break;
         case Music.progress:
-            audioCrossfadeTimeoutIds = audioCrossfade(backgroundAudio, backgroundProgressAudio, 4000, 10, 2);
+            audioCrossfadeTimeoutIds = audioCrossfade(backgroundAudio, backgroundProgressAudio, CROSSFADE_TIME * 1000, 10, 2);
             break;
         case Music.death:
             backgroundAudio.pause();
@@ -344,7 +346,7 @@ function update() {
     if (newX === food.x && newY === food.y) {
         playBackground(Music.eat);
         score++;
-        if (score === 2)
+        if (score === PROGRESS_SCORE)
             playBackground(Music.progress);
         speed += SPEED_INCREASE;
         food = createFood();
