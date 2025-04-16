@@ -152,7 +152,7 @@ enum Music {
   progress,
   death,
   eat,
-  puff
+  puff,
 }
 type Direction = "right" | "left" | "up" | "down";
 type Index = { x: number; y: number };
@@ -183,7 +183,6 @@ function setInitValues() {
     },
   ];
   food = createFood();
-
 }
 
 let snake: Index[];
@@ -201,22 +200,17 @@ const altDirection = new Map<Direction, Direction>([
   ["down", "up"],
 ]);
 
-const deathAudio = new Audio();
-deathAudio.src = "audio/death.mp3";
+const deathAudio = new Audio("audio/death.mp3");
 
-const backgroundAudio = new Audio();
-backgroundAudio.src = "audio/background.mp3";
+const backgroundAudio = new Audio("audio/background.mp3");
 backgroundAudio.loop = true;
 
-const backgroundProgressAudio = new Audio();
-backgroundProgressAudio.src = "audio/progress.mp3";
+const backgroundProgressAudio = new Audio("audio/progress.mp3");
 backgroundProgressAudio.loop = true;
 
-const eatAudio = new Audio();
-eatAudio.src = "audio/eat.mp3";
+const eatAudio = new Audio("audio/eat.mp3");
 
-// const puffAudio = new Audio();
-// puffAudio.src = "audio/puff.mp3";
+// const puffAudio = new Audio("audio/puff.mp3");
 
 deathAudio.volume = 1;
 backgroundAudio.volume = 1;
@@ -226,6 +220,29 @@ eatAudio.volume = 0.4;
 
 const cover = new Image();
 cover.src = "img/cover.jpg";
+
+let audioCrossfadeTimeoutIds: number[] = [];
+
+function audioCrossfade(
+  decr: HTMLAudioElement,
+  incr: HTMLAudioElement,
+  time: number,
+  steps: number,
+  curve: number
+): number[] {
+  const ids: number[] = [];
+  const volumeStep = 1 / steps;
+  for (let i = 0; i < steps; i++) {
+    const cf = i + 1;
+    const id = setTimeout(() => {
+      incr.volume = (volumeStep * cf) ** (1 / curve);
+      decr.volume = (1 - volumeStep * cf) ** curve;
+      // console.log(incr.volume.toPrecision(4), " - ", decr.volume.toPrecision(4));
+    }, (time / steps) * i);
+    ids.push(id);
+  }
+  return ids;
+}
 
 function playBackground(bg: Music) {
   switch (bg) {
@@ -240,19 +257,22 @@ function playBackground(bg: Music) {
       backgroundProgressAudio.play();
       break;
     case Music.progress:
-      for (let i = 0; i < 10; i++) {
-        const cf = i + 1
-        setTimeout(() => {
-          backgroundProgressAudio.volume = 0.1 * cf;
-          backgroundAudio.volume = 1 - 0.1 * cf;
-        }, 200 * i)
-      }
+      audioCrossfadeTimeoutIds = audioCrossfade(
+        backgroundAudio,
+        backgroundProgressAudio,
+        4000,
+        10,
+        2
+      );
       break;
     case Music.death:
       backgroundAudio.pause();
       backgroundAudio.currentTime = 0;
       backgroundProgressAudio.pause();
       backgroundProgressAudio.currentTime = 0;
+      for (const id of audioCrossfadeTimeoutIds) {
+        clearTimeout(id);
+      }
       deathAudio.play();
       break;
     case Music.eat:
@@ -459,7 +479,7 @@ function gameLoop() {
 
 function playAgainQuestion() {
   const text = "click to play again";
-  const font = "px arial"
+  const font = "px arial";
   const center = (SIZE * BLOCK_SIZE) / 2;
   let textSize = 8;
   ctx.font = textSize + font;
