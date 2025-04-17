@@ -6,6 +6,8 @@ const SIZE = 10;
 const START_SPEED = 2;
 const SPEED_INCREASE = 0.2;
 const SENSIVITY = 20;
+const PROGRESS_SCORE = 20;
+const CROSSFADE_TIME = 4;
 
 let blockVal = Math.floor(
   (window.innerHeight - window.innerHeight * 0.2) / SIZE
@@ -149,9 +151,10 @@ function hasValue(val: string | null): val is string {
 
 enum Music {
   background,
+  progress,
   death,
   eat,
-  puff
+  puff,
 }
 type Direction = "right" | "left" | "up" | "down";
 type Index = { x: number; y: number };
@@ -199,23 +202,49 @@ const altDirection = new Map<Direction, Direction>([
   ["down", "up"],
 ]);
 
-const deathAudio = new Audio();
-deathAudio.src = "audio/death.mp3";
-const backgroundAudio = new Audio();
-backgroundAudio.src = "audio/background.mp3";
+const deathAudio = new Audio("audio/death.mp3");
+
+const backgroundAudio = new Audio("audio/background.mp3");
 backgroundAudio.loop = true;
-const eatAudio = new Audio();
-eatAudio.src = "audio/eat.mp3";
-// const puffAudio = new Audio();
-// puffAudio.src = "audio/puff.mp3";
+
+const backgroundProgressAudio = new Audio("audio/progress.mp3");
+backgroundProgressAudio.loop = true;
+
+const eatAudio = new Audio("audio/eat.mp3");
+
+const puffAudio = new Audio("audio/puff.mp3");
 
 deathAudio.volume = 1;
 backgroundAudio.volume = 1;
-eatAudio.volume = 0.4;
-// puffAudio.volume = 1;
+backgroundProgressAudio.volume = 0;
+eatAudio.volume = 0.6;
+puffAudio.volume = 1;
 
 const cover = new Image();
 cover.src = "img/cover.jpg";
+
+let audioCrossfadeTimeoutIds: number[] = [];
+
+function audioCrossfade(
+  decr: HTMLAudioElement,
+  incr: HTMLAudioElement,
+  time: number,
+  steps: number,
+  curve: number
+): number[] {
+  const ids: number[] = [];
+  const volumeStep = 1 / steps;
+  for (let i = 0; i < steps; i++) {
+    const cf = i + 1;
+    const id = setTimeout(() => {
+      incr.volume = (volumeStep * cf) ** (1 / curve);
+      decr.volume = (1 - volumeStep * cf) ** curve;
+      // console.log(incr.volume.toPrecision(4), " - ", decr.volume.toPrecision(4));
+    }, (time / steps) * i);
+    ids.push(id);
+  }
+  return ids;
+}
 
 function playBackground(bg: Music) {
   switch (bg) {
@@ -224,11 +253,28 @@ function playBackground(bg: Music) {
         deathAudio.pause();
         deathAudio.currentTime = 0;
       }
+      backgroundAudio.volume = 1;
+      backgroundProgressAudio.volume = 0;
       backgroundAudio.play();
+      backgroundProgressAudio.play();
+      break;
+    case Music.progress:
+      audioCrossfadeTimeoutIds = audioCrossfade(
+        backgroundAudio,
+        backgroundProgressAudio,
+        CROSSFADE_TIME * 1000,
+        10,
+        2
+      );
       break;
     case Music.death:
       backgroundAudio.pause();
       backgroundAudio.currentTime = 0;
+      backgroundProgressAudio.pause();
+      backgroundProgressAudio.currentTime = 0;
+      for (const id of audioCrossfadeTimeoutIds) {
+        clearTimeout(id);
+      }
       deathAudio.play();
       break;
     case Music.eat:
@@ -238,7 +284,10 @@ function playBackground(bg: Music) {
       eatAudio.play();
       break;
     case Music.puff:
-      // puffAudio.play();
+      if (!puffAudio.ended) {
+        puffAudio.currentTime = 0;
+      }
+      puffAudio.play();
       break;
   }
 }
@@ -403,6 +452,7 @@ function update(): boolean {
   if (newX === food.x && newY === food.y) {
     playBackground(Music.eat);
     score++;
+    if (score === PROGRESS_SCORE) playBackground(Music.progress);
     speed += SPEED_INCREASE;
     food = createFood();
   } else {
@@ -420,7 +470,6 @@ function gameLoop() {
 
   if (!cont) {
     playBackground(Music.death);
-    playBackground(Music.puff);
     if (score > record) localStorage.setItem(BEST_SCORE, score.toString());
     playAgainQuestion();
     return;
@@ -434,7 +483,7 @@ function gameLoop() {
 
 function playAgainQuestion() {
   const text = "click to play again";
-  const font = "px arial"
+  const font = "px arial";
   const center = (SIZE * BLOCK_SIZE) / 2;
   let textSize = 8;
   ctx.font = textSize + font;
@@ -458,6 +507,7 @@ function playGame() {
   canvasElement.removeEventListener("click", playGame);
   setInitValues();
   draw();
+  playBackground(Music.puff);
   playBackground(Music.background);
   gameLoop();
 }

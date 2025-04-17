@@ -6,6 +6,8 @@ const SIZE = 10;
 const START_SPEED = 2;
 const SPEED_INCREASE = 0.2;
 const SENSIVITY = 20;
+const PROGRESS_SCORE = 20;
+const CROSSFADE_TIME = 4;
 let blockVal = Math.floor((window.innerHeight - window.innerHeight * 0.2) / SIZE);
 if (window.innerWidth < blockVal * SIZE + window.innerWidth * 0.1)
     blockVal = Math.floor((window.innerWidth - window.innerWidth * 0.1) / SIZE);
@@ -133,9 +135,10 @@ function hasValue(val) {
 var Music;
 (function (Music) {
     Music[Music["background"] = 0] = "background";
-    Music[Music["death"] = 1] = "death";
-    Music[Music["eat"] = 2] = "eat";
-    Music[Music["puff"] = 3] = "puff";
+    Music[Music["progress"] = 1] = "progress";
+    Music[Music["death"] = 2] = "death";
+    Music[Music["eat"] = 3] = "eat";
+    Music[Music["puff"] = 4] = "puff";
 })(Music || (Music = {}));
 function setInitValues() {
     const ss = Math.floor(SIZE / 2) * BLOCK_SIZE - BLOCK_SIZE;
@@ -174,21 +177,35 @@ const altDirection = new Map([
     ["up", "down"],
     ["down", "up"],
 ]);
-const deathAudio = new Audio();
-deathAudio.src = "audio/death.mp3";
-const backgroundAudio = new Audio();
-backgroundAudio.src = "audio/background.mp3";
+const deathAudio = new Audio("audio/death.mp3");
+const backgroundAudio = new Audio("audio/background.mp3");
 backgroundAudio.loop = true;
-const eatAudio = new Audio();
-eatAudio.src = "audio/eat.mp3";
-// const puffAudio = new Audio();
-// puffAudio.src = "audio/puff.mp3";
+const backgroundProgressAudio = new Audio("audio/progress.mp3");
+backgroundProgressAudio.loop = true;
+const eatAudio = new Audio("audio/eat.mp3");
+const puffAudio = new Audio("audio/puff.mp3");
 deathAudio.volume = 1;
 backgroundAudio.volume = 1;
-eatAudio.volume = 0.4;
-// puffAudio.volume = 1;
+backgroundProgressAudio.volume = 0;
+eatAudio.volume = 0.6;
+puffAudio.volume = 1;
 const cover = new Image();
 cover.src = "img/cover.jpg";
+let audioCrossfadeTimeoutIds = [];
+function audioCrossfade(decr, incr, time, steps, curve) {
+    const ids = [];
+    const volumeStep = 1 / steps;
+    for (let i = 0; i < steps; i++) {
+        const cf = i + 1;
+        const id = setTimeout(() => {
+            incr.volume = Math.pow((volumeStep * cf), (1 / curve));
+            decr.volume = Math.pow((1 - volumeStep * cf), curve);
+            // console.log(incr.volume.toPrecision(4), " - ", decr.volume.toPrecision(4));
+        }, (time / steps) * i);
+        ids.push(id);
+    }
+    return ids;
+}
 function playBackground(bg) {
     switch (bg) {
         case Music.background:
@@ -196,11 +213,22 @@ function playBackground(bg) {
                 deathAudio.pause();
                 deathAudio.currentTime = 0;
             }
+            backgroundAudio.volume = 1;
+            backgroundProgressAudio.volume = 0;
             backgroundAudio.play();
+            backgroundProgressAudio.play();
+            break;
+        case Music.progress:
+            audioCrossfadeTimeoutIds = audioCrossfade(backgroundAudio, backgroundProgressAudio, CROSSFADE_TIME * 1000, 10, 2);
             break;
         case Music.death:
             backgroundAudio.pause();
             backgroundAudio.currentTime = 0;
+            backgroundProgressAudio.pause();
+            backgroundProgressAudio.currentTime = 0;
+            for (const id of audioCrossfadeTimeoutIds) {
+                clearTimeout(id);
+            }
             deathAudio.play();
             break;
         case Music.eat:
@@ -210,7 +238,10 @@ function playBackground(bg) {
             eatAudio.play();
             break;
         case Music.puff:
-            // puffAudio.play();
+            if (!puffAudio.ended) {
+                puffAudio.currentTime = 0;
+            }
+            puffAudio.play();
             break;
     }
 }
@@ -315,6 +346,8 @@ function update() {
     if (newX === food.x && newY === food.y) {
         playBackground(Music.eat);
         score++;
+        if (score === PROGRESS_SCORE)
+            playBackground(Music.progress);
         speed += SPEED_INCREASE;
         food = createFood();
     }
@@ -329,7 +362,6 @@ function gameLoop() {
     draw();
     if (!cont) {
         playBackground(Music.death);
-        playBackground(Music.puff);
         if (score > record)
             localStorage.setItem(BEST_SCORE, score.toString());
         playAgainQuestion();
@@ -365,6 +397,7 @@ function playGame() {
     canvasElement.removeEventListener("click", playGame);
     setInitValues();
     draw();
+    playBackground(Music.puff);
     playBackground(Music.background);
     gameLoop();
 }
