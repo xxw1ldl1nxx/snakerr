@@ -275,6 +275,7 @@ function playBackground(bg: Music) {
       for (const id of audioCrossfadeTimeoutIds) {
         clearTimeout(id);
       }
+      audioCrossfadeTimeoutIds = [];
       deathAudio.play();
       break;
     case Music.eat:
